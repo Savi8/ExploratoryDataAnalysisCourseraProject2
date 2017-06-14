@@ -1,16 +1,9 @@
-## This first line will likely take a few seconds. Be patient!
-if(!exists("NEI")){
-  NEI <- readRDS("./data/summarySCC_PM25.rds")
-}
-if(!exists("SCC")){
-  SCC <- readRDS("./data/Source_Classification_Code.rds")
-}
-# Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? 
-# Using the base plotting system, make a plot showing the total PM2.5 emission from all sources 
-# for each of the years 1999, 2002, 2005, and 2008.
-
-aggregatedTotalByYear <- aggregate(Emissions ~ year, NEI, sum)
-
-png('plot1.png')
-barplot(height=aggregatedTotalByYear$Emissions, names.arg=aggregatedTotalByYear$year, xlab="years", ylab=expression('total PM'[2.5]*' emission'),main=expression('Total PM'[2.5]*' emissions at various years'))
+## Reading in the data 
+NEI <- readRDS("summarySCC_PM25.rds") 
+## sum of emissions per year 
+pm25_sum <- with(NEI, tapply(Emissions, year, sum)) 
+## plot 
+png(filename = "plot1.png") 
+plot(pm25_sum, xaxt = "n", main = "Total PM 2.5 Emissions", xlab = "Year", ylab = "PM 2.5 (tons)", pch = 19, type = "b") 
+axis(1, 1:4, labels = c("1999", "2002", "2005", "2008")) 
 dev.off()
