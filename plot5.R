@@ -1,33 +1,16 @@
-## This first line will likely take a few seconds. Be patient!
-if(!exists("NEI")){
-  NEI <- readRDS("./data/summarySCC_PM25.rds")
-}
-if(!exists("SCC")){
-  SCC <- readRDS("./data/Source_Classification_Code.rds")
-}
-# merge the two data sets 
-if(!exists("NEISCC")){
-  NEISCC <- merge(NEI, SCC, by="SCC")
-}
-
-library(ggplot2)
-
-# How have emissions from motor vehicle sources changed from 1999-2008 in Baltimore City?
-
-# 24510 is Baltimore, see plot2.R
-# Searching for ON-ROAD type in NEI
-# Don't actually know it this is the intention, but searching for 'motor' in SCC only gave a subset (non-cars)
-subsetNEI <- NEI[NEI$fips=="24510" & NEI$type=="ON-ROAD",  ]
-
-aggregatedTotalByYear <- aggregate(Emissions ~ year, subsetNEI, sum)
-
-
-
-png("plot5.png", width=840, height=480)
-g <- ggplot(aggregatedTotalByYear, aes(factor(year), Emissions))
-g <- g + geom_bar(stat="identity") +
-  xlab("year") +
-  ylab(expression('Total PM'[2.5]*" Emissions")) +
-  ggtitle('Total Emissions from motor vehicle (type = ON-ROAD) in Baltimore City, Maryland (fips = "24510") from 1999 to 2008')
-print(g)
+## Reading in the data 
+NEI <- readRDS("summarySCC_PM25.rds") 
+SCC <- readRDS("Source_Classification_Code.rds") 
+## Subset with the observations containing vehicle emissions from baltimore city summary(SCC$EI.Sector) 
+# grepl returns a logical vector 
+SCC_vec <- SCC[grepl("Vehicles", SCC$EI.Sector, ignore.case = TRUE),] 
+NEI_vec_bc <- subset(NEI, NEI$SCC %in% SCC_vec$SCC & fips == "24510") 
+# simpler alternative, which gives the same results: # 
+NEI_vec_bc <- subset(NEI, fips == "24510" & type == "ON-ROAD")
+ ## Total Emissions for each year 
+NEI_vec_total <- with(NEI_vec_bc, tapply(Emissions, year, sum)) 
+## plot 
+png(filename = "plot5.png") 
+plot(NEI_vec_total, xaxt="n", xlab = "Year", ylab = "PM 2.5 (tons)", main = "Total Emissions from motor vehicle sources in Baltimore City", type = "b", col = "blue") 
+axis(1, 1:4, c("1999", "2002", "2005", "2008")) 
 dev.off()
